@@ -3,8 +3,8 @@
 
 #include "TextureLoading.h"
 
-const int screenX = 1000;
-const int screenY = 800;
+const int screenX = 1920;
+const int screenY = 1200;
 
 const int TICKS_PER_SECOND = 100;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
@@ -17,7 +17,7 @@ struct Vector {
 	float x = 0, y = 0;
 };
 struct Player {
-	SDL_Rect rect = { 100,100,50,50 };
+	SDL_Rect rect = { 200,200,170,170 };
 	SDL_Texture * sprite = NULL;
 	Vector vel;
 };
@@ -60,6 +60,7 @@ bool init()
 
 	return success;
 }
+
 int Input(SDL_Event * e, Controller * c) {
 	while (SDL_PollEvent(e) != 0)
 	{
@@ -119,10 +120,8 @@ int Input(SDL_Event * e, Controller * c) {
 	}
 	return -2;
 }
-bool GameLogic(Player * p, Controller * c, int f) {
-	if (f == -1) {
-		return false;
-	}
+
+void pMove(Player * p, Controller * c) {
 	if (p->vel.y > 0) {
 		p->vel.y -= .05f;
 		p->rect.y += (int)p->vel.y;
@@ -139,7 +138,7 @@ bool GameLogic(Player * p, Controller * c, int f) {
 	}
 	if (p->vel.x > 0) {
 		p->vel.x -= .05f;
-		p->rect.x += (int)p->vel.x; 
+		p->rect.x += (int)p->vel.x;
 	}
 	else {
 		p->vel.x += .05f;
@@ -151,6 +150,13 @@ bool GameLogic(Player * p, Controller * c, int f) {
 	else if (c->right) {
 		p->vel.x += .2f;
 	}
+}
+
+bool GameLogic(Player * p, Controller * c, int f) {
+	if (f == -1) {return false;}
+
+	pMove(p, c);
+
 	return true;
 }
 
@@ -159,7 +165,7 @@ int main(int argc, char * argv[]) {
 
 	Player player;
 	Controller controls;
-	player.sprite = GenerateTexture("monkaS", renderer);
+	player.sprite = GenerateTexture("shiro", renderer);
 
 	Uint32 gameTicks = SDL_GetTicks();
 	int loops;
