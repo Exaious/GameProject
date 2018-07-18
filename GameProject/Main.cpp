@@ -139,7 +139,7 @@ bool GameLogic(Player * p, Controller * c, int f) {
 	}
 	if (p->vel.x > 0) {
 		p->vel.x -= .05f;
-		p->rect.x += (int)p->vel.x;
+		p->rect.x += (int)p->vel.x; 
 	}
 	else {
 		p->vel.x += .05f;
