@@ -73,67 +73,6 @@ bool init()
 
 	return success;
 }
-
-bool collision(SDL_Rect * rect1, SDL_Rect * rect2) {
-	if (rect1->x < rect2->x + rect2->w &&
-		rect1->x + rect1->w > rect2->x &&
-		rect1->y < rect2->y + rect2->h &&
-		rect1->h + rect1->y > rect2->y) {
-		return true;
-	}
-	return false;
-}
-void pMove(Player * p, Controller * c) {
-	if (p->vel.y > 0) {
-		p->vel.y -= .05f;
-		p->rect.y += (int)p->vel.y;
-	}
-	else {
-		p->vel.y += .05f;
-		p->rect.y += (int)p->vel.y;
-	}
-	if (c->up) {
-		p->vel.y -= .2f;
-	}
-	else if (c->down) {
-		p->vel.y += .2f;
-	}
-	if (p->vel.x > 0) {
-		p->vel.x -= .05f;
-		p->rect.x += (int)p->vel.x;
-	}
-	else {
-		p->vel.x += .05f;
-		p->rect.x += (int)p->vel.x;
-	}
-	if (c->left) {
-		p->vel.x -= .2f;
-	}
-	else if (c->right) {
-		p->vel.x += .2f;
-	}
-}
-void fMove(Player * p, Fire * fire) {
-	fire[1].rect.x = p->rect.x - fire[1].rect.w;
-	fire[1].rect.y = p->rect.y;
-	fire[2].rect.x = p->rect.x;
-	fire[2].rect.y = p->rect.y - fire[2].rect.h;
-	fire[3].rect.x = p->rect.x + p->rect.w;
-	fire[3].rect.y = p->rect.y;
-	fire[0].rect.y = p->rect.y + p->rect.h;
-	fire[0].rect.x = p->rect.x;
-
-}
-bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
-	if (f == -1) { return false; }
-
-	pMove(p, c);
-	fMove(p, fire);
-
-	return true;
-}
-
-
 int Input(SDL_Event * e, Controller * c, Fire * fire) {
 	while (SDL_PollEvent(e) != 0)
 	{
@@ -201,6 +140,68 @@ int Input(SDL_Event * e, Controller * c, Fire * fire) {
 	}
 	return -2;
 }
+bool collision(SDL_Rect * rect1, SDL_Rect * rect2) {
+	if (rect1->x < rect2->x + rect2->w &&
+		rect1->x + rect1->w > rect2->x &&
+		rect1->y < rect2->y + rect2->h &&
+		rect1->h + rect1->y > rect2->y) {
+		return true;
+	}
+	return false;
+}
+void pMove(Player * p, Controller * c) {
+	p->vel.y += .03f;
+	if (p->vel.y > 0) {
+		p->rect.y += (int)p->vel.y;
+	}
+	else {
+		p->vel.y += .02f;
+		p->rect.y += (int)p->vel.y;
+	}
+	if (c->up) {
+		p->vel.y -= .2f;
+	}
+	else if (c->down) {
+		p->vel.y += .2f;
+	}
+	if (p->vel.x > 0) {
+		p->vel.x -= .05f;
+		p->rect.x += (int)p->vel.x;
+	}
+	else {
+		p->vel.x += .05f;
+		p->rect.x += (int)p->vel.x;
+	}
+	if (c->left) {
+		p->vel.x -= .2f;
+	}
+	else if (c->right) {
+		p->vel.x += .2f;
+	}
+}
+void fMove(Player * p, Fire * fire) {
+	fire[1].rect.x = p->rect.x - fire[1].rect.w;
+	fire[1].rect.y = p->rect.y;
+	fire[2].rect.x = p->rect.x;
+	fire[2].rect.y = p->rect.y - fire[2].rect.h;
+	fire[3].rect.x = p->rect.x + p->rect.w;
+	fire[3].rect.y = p->rect.y;
+	fire[0].rect.y = p->rect.y + p->rect.h;
+	fire[0].rect.x = p->rect.x;
+
+}
+bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
+	if (f == -1) { return false; }
+
+	pMove(p, c);
+	fMove(p, fire);
+
+
+	return true;
+}
+
+
+
 int main(int argc, char * argv[]) {
 	init();
 	
