@@ -10,6 +10,7 @@ const int screenY = 900;
 const int TICKS_PER_SECOND = 100;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 const int MAX_FRAMESKIP = 5;
+const int blockNumber = (screenX * 6);
 
 SDL_Window * window = NULL;
 SDL_Renderer * renderer = NULL;
@@ -26,6 +27,11 @@ struct Fire {
 	SDL_Rect rect = { 0,0,170,170 };
 	SDL_Texture * sprite = NULL;
 	bool visible = false;
+};
+struct Box {
+	SDL_Rect rect = { 0,0,100,100 };
+	int x = 0;
+	int y = 0;
 };
 struct Controller {
 	bool right = false;
@@ -189,7 +195,7 @@ bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
 
 int main(int argc, char * argv[]) {
 	init();
-
+	
 	Player player;
 	Controller controls;
 	Fire fire[4];
