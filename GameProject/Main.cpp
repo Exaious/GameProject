@@ -1,10 +1,11 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <iostream>
 
 #include "TextureLoading.h"
 
-const int screenX = 1000;
-const int screenY = 500;
+const int screenX = 1800;
+const int screenY = 900;
 
 const int TICKS_PER_SECOND = 100;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
@@ -22,7 +23,7 @@ struct Player {
 	Vector vel;
 };
 struct Fire {
-	SDL_Rect rect = { 0,0,50,50 };
+	SDL_Rect rect = { 0,0,170,170 };
 	SDL_Texture * sprite = NULL;
 	bool visible = false;
 };
@@ -91,7 +92,7 @@ int Input(SDL_Event * e, Controller * c, Fire * fire) {
 
 			case SDLK_UP:
 				c->up = true;
-				fire[4].visible = true;
+				fire[0].visible = true;
 				return 1;
 
 			case SDLK_DOWN:
@@ -108,18 +109,22 @@ int Input(SDL_Event * e, Controller * c, Fire * fire) {
 			{
 			case SDLK_LEFT:
 				c->left = false;
+				fire[3].visible = false;
 				return 2;
 
 			case SDLK_RIGHT:
 				c->right = false;
+				fire[1].visible = false;
 				return 2;
 
 			case SDLK_UP:
 				c->up = false;
+				fire[0].visible = false;
 				return 2;
 
 			case SDLK_DOWN:
 				c->down = false;
+				fire[2].visible = false;
 				return 2;
 
 			default:
@@ -164,12 +169,12 @@ void pMove(Player * p, Controller * c) {
 void fMove(Player * p, Fire * fire) {
 	fire[1].rect.x = p->rect.x - fire[1].rect.w;
 	fire[1].rect.y = p->rect.y;
-	fire[2].rect.x = p->rect.x - fire[2].rect.h;
-	fire[2].rect.y = p->rect.y;
-	fire[3].rect.y = p->rect.y + p->rect.w;
-	fire[3].rect.x = p->rect.x;
-	fire[4].rect.y = p->rect.y + p->rect.h;
-	fire[4].rect.x = p->rect.x;
+	fire[2].rect.x = p->rect.x;
+	fire[2].rect.y = p->rect.y - fire[2].rect.h;
+	fire[3].rect.x = p->rect.x + p->rect.w;
+	fire[3].rect.y = p->rect.y;
+	fire[0].rect.y = p->rect.y + p->rect.h;
+	fire[0].rect.x = p->rect.x;
 	
 }
 
@@ -212,10 +217,10 @@ int main(int argc, char * argv[]) {
 			SDL_RenderClear(renderer);
 			SDL_RenderCopy(renderer, player.sprite, NULL, &player.rect);
 			for (int i = 0; i < 4; ++i) {
-				//std::cout << fire[i].rect.y << std::endl;
-				//if (fire[i].visible) {
+				std::cout << fire[i].rect.y << std::endl;
+				if (fire[i].visible) {
 					SDL_RenderCopy(renderer, fire[i].sprite, NULL, &fire[i].rect);
-				//}
+				}
 			}
 			SDL_RenderPresent(renderer);
 		}
