@@ -3,8 +3,8 @@
 
 #include "TextureLoading.h"
 
-const int screenX = 1920;
-const int screenY = 1200;
+const int screenX = 1000;
+const int screenY = 500;
 
 const int TICKS_PER_SECOND = 100;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
@@ -20,6 +20,11 @@ struct Player {
 	SDL_Rect rect = { 200,200,170,170 };
 	SDL_Texture * sprite = NULL;
 	Vector vel;
+};
+struct Fire {
+	SDL_Rect rect = { 0,0,50,50 };
+	SDL_Texture * sprite = NULL;
+	bool visible = false;
 };
 struct Controller {
 	bool right = false;
@@ -61,7 +66,7 @@ bool init()
 	return success;
 }
 
-int Input(SDL_Event * e, Controller * c) {
+int Input(SDL_Event * e, Controller * c, Fire * fire) {
 	while (SDL_PollEvent(e) != 0)
 	{
 		if (e->type == SDL_QUIT)
@@ -76,18 +81,22 @@ int Input(SDL_Event * e, Controller * c) {
 			{
 			case SDLK_LEFT:
 				c->left = true;
+				fire[3].visible = true;
 				return 1;
 
 			case SDLK_RIGHT:
 				c->right = true;
+				fire[1].visible = true;
 				return 1;
 
 			case SDLK_UP:
 				c->up = true;
+				fire[4].visible = true;
 				return 1;
 
 			case SDLK_DOWN:
 				c->down = true;
+				fire[2].visible = true;
 				return 1;
 
 			default:
@@ -152,10 +161,20 @@ void pMove(Player * p, Controller * c) {
 	}
 }
 
-bool GameLogic(Player * p, Controller * c, int f) {
+void fMove(Player * p, Fire * fire) {
+	fire[1].rect.x = p->rect.x - fire[1].rect.w;
+	//fire[1].rect.y = ()
+	fire[2].rect.x = p->rect.x - fire[2].rect.h;
+	fire[3].rect.y = p->rect.y + p->rect.w;
+	fire[4].rect.y = p->rect.y + p->rect.h;
+	
+}
+
+bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
 	if (f == -1) {return false;}
 
 	pMove(p, c);
+	fMove(p, fire);
 
 	return true;
 }
@@ -165,6 +184,12 @@ int main(int argc, char * argv[]) {
 
 	Player player;
 	Controller controls;
+	Fire fire[4];
+
+	for (int i = 0; i < 4; i++) {
+		fire[i].sprite = GenerateTexture("fire", renderer);
+	}
+
 	player.sprite = GenerateTexture("shiro", renderer);
 
 	Uint32 gameTicks = SDL_GetTicks();
@@ -177,12 +202,18 @@ int main(int argc, char * argv[]) {
 		while (SDL_GetTicks() > gameTicks && loops < MAX_FRAMESKIP) {
 			gameTicks += SKIP_TICKS;
 			loops++;
-			int val = Input(&e, &controls);
-			inGame = GameLogic(&player, &controls, val);
+			int val = Input(&e, &controls, fire);
+			inGame = GameLogic(&player, &controls, val, fire);
 			if (inGame == false) { break; }
 
 			SDL_RenderClear(renderer);
 			SDL_RenderCopy(renderer, player.sprite, NULL, &player.rect);
+			for (int i = 0; i < 4; ++i) {
+				//std::cout << fire[i].rect.y << std::endl;
+				//if (fire[i].visible) {
+					SDL_RenderCopy(renderer, fire[i].sprite, NULL, &fire[i].rect);
+				//}
+			}
 			SDL_RenderPresent(renderer);
 		}
 		if (loops > 1) {
