@@ -30,6 +30,9 @@
     <ClCompile Include="Moon.cpp">
       <Filter>Background</Filter>
     </ClCompile>
+    <ClCompile Include="Source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TextureLoading.h">
