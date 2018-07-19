@@ -5,33 +5,33 @@
 #include "TextureLoading.h"
 
 const int screenX = 1900;
-const int screenY = 950;
+const int screenY = 900;
 
 const int TICKS_PER_SECOND = 100;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 const int MAX_FRAMESKIP = 5;
-const int blockNumber = (screenX * 6);
+const int boxNumber = ((screenX/2) * 6);
 
 SDL_Window * window = NULL;
 SDL_Renderer * renderer = NULL;
 
-struct Vector {
+struct VectorF {
 	float x = 0, y = 0;
 };
 struct Player {
 	SDL_Rect rect = { 200,200,125,125 };
 	SDL_Texture * sprite = NULL;
-	Vector vel;
+	VectorF vel;
 };
 struct Fire {
 	SDL_Rect rect = { 0,0,125,125 };
 	SDL_Texture * sprite = NULL;
 	bool visible = false;
 };
-struct Box {
-	SDL_Rect rect = { 0,0,100,100 };
+struct VectorI {
 	int x = 0;
 	int y = 0;
+	int h = 0;
 };
 struct Controller {
 	bool right = false;
@@ -73,6 +73,66 @@ bool init()
 
 	return success;
 }
+
+bool collision(SDL_Rect * rect1, SDL_Rect * rect2) {
+	if (rect1->x < rect2->x + rect2->w &&
+		rect1->x + rect1->w > rect2->x &&
+		rect1->y < rect2->y + rect2->h &&
+		rect1->h + rect1->y > rect2->y) {
+		return true;
+	}
+	return false;
+}
+void pMove(Player * p, Controller * c) {
+	if (p->vel.y > 0) {
+		p->vel.y -= .05f;
+		p->rect.y += (int)p->vel.y;
+	}
+	else {
+		p->vel.y += .05f;
+		p->rect.y += (int)p->vel.y;
+	}
+	if (c->up) {
+		p->vel.y -= .2f;
+	}
+	else if (c->down) {
+		p->vel.y += .2f;
+	}
+	if (p->vel.x > 0) {
+		p->vel.x -= .05f;
+		p->rect.x += (int)p->vel.x;
+	}
+	else {
+		p->vel.x += .05f;
+		p->rect.x += (int)p->vel.x;
+	}
+	if (c->left) {
+		p->vel.x -= .2f;
+	}
+	else if (c->right) {
+		p->vel.x += .2f;
+	}
+}
+void fMove(Player * p, Fire * fire) {
+	fire[1].rect.x = p->rect.x - fire[1].rect.w;
+	fire[1].rect.y = p->rect.y;
+	fire[2].rect.x = p->rect.x;
+	fire[2].rect.y = p->rect.y - fire[2].rect.h;
+	fire[3].rect.x = p->rect.x + p->rect.w;
+	fire[3].rect.y = p->rect.y;
+	fire[0].rect.y = p->rect.y + p->rect.h;
+	fire[0].rect.x = p->rect.x;
+
+}
+bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
+	if (f == -1) { return false; }
+
+	pMove(p, c);
+	fMove(p, fire);
+
+	return true;
+}
+
 
 int Input(SDL_Event * e, Controller * c, Fire * fire) {
 	while (SDL_PollEvent(e) != 0)
@@ -141,69 +201,44 @@ int Input(SDL_Event * e, Controller * c, Fire * fire) {
 	}
 	return -2;
 }
-
-void pMove(Player * p, Controller * c) {
-	if (p->vel.y > 0) {
-		p->vel.y -= .05f;
-		p->rect.y += (int)p->vel.y;
-	}
-	else {
-		p->vel.y += .05f;
-		p->rect.y += (int)p->vel.y;
-	}
-	if (c->up) {
-		p->vel.y -= .2f;
-	}
-	else if (c->down) {
-		p->vel.y += .2f;
-	}
-	if (p->vel.x > 0) {
-		p->vel.x -= .05f;
-		p->rect.x += (int)p->vel.x;
-	}
-	else {
-		p->vel.x += .05f;
-		p->rect.x += (int)p->vel.x;
-	}
-	if (c->left) {
-		p->vel.x -= .2f;
-	}
-	else if (c->right) {
-		p->vel.x += .2f;
-	}
-}
-
-void fMove(Player * p, Fire * fire) {
-	fire[1].rect.x = p->rect.x - fire[1].rect.w;
-	fire[1].rect.y = p->rect.y;
-	fire[2].rect.x = p->rect.x;
-	fire[2].rect.y = p->rect.y - fire[2].rect.h;
-	fire[3].rect.x = p->rect.x + p->rect.w;
-	fire[3].rect.y = p->rect.y;
-	fire[0].rect.y = p->rect.y + p->rect.h;
-	fire[0].rect.x = p->rect.x;
-	
-}
-
-bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
-	if (f == -1) {return false;}
-
-	pMove(p, c);
-	fMove(p, fire);
-
-	return true;
-}
-
 int main(int argc, char * argv[]) {
 	init();
 	
 	Player player;
 	Controller controls;
 	Fire fire[4];
+	SDL_Rect boxDim = { 0,0,100,100 };
+
+	VectorI positions[boxNumber];
+	int offsetX = 0;
+	int o = 0;
+	for (int i = 0; i < boxNumber; ++i) {
+		positions[i].x += offsetX;
+		offsetX += 100;
+		o = (rand() % 4);
+		positions[i].y = 500 + (o * 100);
+		switch (o) {
+		case 0:
+			positions[i].h = 400;
+			break;
+		case 1:
+			positions[i].h = 300;
+			break;
+		case 2:
+			positions[i].h = 200;
+			break;
+		case 3:
+			positions[i].h = 100;
+			break;
+		}
+
+	}
+
 	for (int i = 0; i < 4; i++) {
 		fire[i].sprite = GenerateTexture("fire", renderer);
 	}
 	player.sprite = GenerateTexture("shiro", renderer);
+	SDL_Texture * box_T = GenerateTexture("box", renderer);
 	SDL_Texture * background_T = GenerateTexture("moon", renderer);
 
 	Uint32 gameTicks = SDL_GetTicks();
@@ -222,6 +257,14 @@ int main(int argc, char * argv[]) {
 
 			SDL_RenderClear(renderer);
 			SDL_RenderCopy(renderer, background_T, NULL, &background);
+			
+			for (int i = 0; i < boxNumber; ++i) {
+				boxDim.x = positions[i].x;
+				boxDim.y = positions[i].y;
+				boxDim.h = positions[i].h;
+				SDL_RenderCopy(renderer, box_T, NULL, &boxDim);
+			}
+
 			SDL_RenderCopy(renderer, player.sprite, NULL, &player.rect);
 			for (int i = 0; i < 4; ++i) {
 				if (fire[i].visible) {
