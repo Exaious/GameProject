@@ -4,8 +4,8 @@
 
 #include "TextureLoading.h"
 
-const int screenX = 1800;
-const int screenY = 900;
+const int screenX = 1900;
+const int screenY = 950;
 
 const int TICKS_PER_SECOND = 100;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
@@ -19,12 +19,12 @@ struct Vector {
 	float x = 0, y = 0;
 };
 struct Player {
-	SDL_Rect rect = { 200,200,170,170 };
+	SDL_Rect rect = { 200,200,125,125 };
 	SDL_Texture * sprite = NULL;
 	Vector vel;
 };
 struct Fire {
-	SDL_Rect rect = { 0,0,170,170 };
+	SDL_Rect rect = { 0,0,125,125 };
 	SDL_Texture * sprite = NULL;
 	bool visible = false;
 };
@@ -40,6 +40,7 @@ struct Controller {
 	bool up = false;
 	bool down = false;
 };
+SDL_Rect background = { 0,0,(2 * screenX),screenY };
 
 bool init()
 {
@@ -199,12 +200,11 @@ int main(int argc, char * argv[]) {
 	Player player;
 	Controller controls;
 	Fire fire[4];
-
 	for (int i = 0; i < 4; i++) {
 		fire[i].sprite = GenerateTexture("fire", renderer);
 	}
-
 	player.sprite = GenerateTexture("shiro", renderer);
+	SDL_Texture * background_T = GenerateTexture("moon", renderer);
 
 	Uint32 gameTicks = SDL_GetTicks();
 	int loops;
@@ -221,9 +221,9 @@ int main(int argc, char * argv[]) {
 			if (inGame == false) { break; }
 
 			SDL_RenderClear(renderer);
+			SDL_RenderCopy(renderer, background_T, NULL, &background);
 			SDL_RenderCopy(renderer, player.sprite, NULL, &player.rect);
 			for (int i = 0; i < 4; ++i) {
-				std::cout << fire[i].rect.y << std::endl;
 				if (fire[i].visible) {
 					SDL_RenderCopy(renderer, fire[i].sprite, NULL, &fire[i].rect);
 				}

@@ -131,7 +131,7 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Moon.cpp" />
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Michaels.cpp" />
     <ClCompile Include="TextureLoading.cpp" />
   </ItemGroup>
   <ItemGroup>
