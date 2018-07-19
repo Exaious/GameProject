@@ -163,10 +163,13 @@ void pMove(Player * p, Controller * c) {
 
 void fMove(Player * p, Fire * fire) {
 	fire[1].rect.x = p->rect.x - fire[1].rect.w;
-	//fire[1].rect.y = ()
+	fire[1].rect.y = p->rect.y;
 	fire[2].rect.x = p->rect.x - fire[2].rect.h;
+	fire[2].rect.y = p->rect.y;
 	fire[3].rect.y = p->rect.y + p->rect.w;
+	fire[3].rect.x = p->rect.x;
 	fire[4].rect.y = p->rect.y + p->rect.h;
+	fire[4].rect.x = p->rect.x;
 	
 }
 
