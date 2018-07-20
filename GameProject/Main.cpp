@@ -1,7 +1,8 @@
 #include <SDL.h>
 #include <SDL_image.h>
+#include <stdlib.h>
+#include <time.h>
 #include <iostream>
-
 #include "TextureLoading.h"
 
 const int screenX = 1900;
@@ -19,12 +20,12 @@ struct VectorF {
 	float x = 0, y = 0;
 };
 struct Player {
-	SDL_Rect rect = { 200,200,125,125 };
+	SDL_Rect rect = { (screenX/2) - 60,0,120,120 };
 	SDL_Texture * sprite = NULL;
 	VectorF vel;
 };
 struct Fire {
-	SDL_Rect rect = { 0,0,125,125 };
+	SDL_Rect rect = { 0,0,120,120 };
 	SDL_Texture * sprite = NULL;
 	bool visible = false;
 };
@@ -36,11 +37,11 @@ struct VectorI {
 struct Controller {
 	bool right = false;
 	bool left = false;
-
+	bool gravity = true;
 	bool up = false;
 	bool down = false;
 };
-SDL_Rect background = { 0,0,(2 * screenX),screenY };
+SDL_Rect background = { -screenX,0,(3 * screenX),screenY };
 
 bool init()
 {
@@ -73,7 +74,7 @@ bool init()
 
 	return success;
 }
-int Input(SDL_Event * e, Controller * c, Fire * fire) {
+int Input(SDL_Event * e, Controller * c, Fire * fire, int * fuel) {
 	while (SDL_PollEvent(e) != 0)
 	{
 		if (e->type == SDL_QUIT)
@@ -83,31 +84,34 @@ int Input(SDL_Event * e, Controller * c, Fire * fire) {
 		//User presses a key
 		else if (e->type == SDL_KEYDOWN)
 		{
-			//Select surfaces based on key press
-			switch (e->key.keysym.sym)
-			{
-			case SDLK_LEFT:
-				c->left = true;
-				fire[3].visible = true;
-				return 1;
+			if (c->gravity) {
+				//Select surfaces based on key press
+				switch (e->key.keysym.sym)
+				{
+				case SDLK_LEFT:
+					c->left = true;
+					fire[3].visible = true;
+					return 1;
 
-			case SDLK_RIGHT:
-				c->right = true;
-				fire[1].visible = true;
-				return 1;
+				case SDLK_RIGHT:
+					c->right = true;
+					fire[1].visible = true;
+					return 1;
 
-			case SDLK_UP:
-				c->up = true;
-				fire[0].visible = true;
-				return 1;
+				case SDLK_UP:
+					c->up = true;
+					fire[0].visible = true;
+					return 1;
 
-			case SDLK_DOWN:
-				c->down = true;
-				fire[2].visible = true;
-				return 1;
+				case SDLK_DOWN:
+					c->down = true;
+					fire[2].visible = true;
+					return 1;
 
-			default:
-				return 0;
+				default:
+					return 0;
+				}
+				*fuel -= 1;
 			}
 		}
 		else if (e->type == SDL_KEYUP) {
@@ -140,22 +144,26 @@ int Input(SDL_Event * e, Controller * c, Fire * fire) {
 	}
 	return -2;
 }
-bool collision(SDL_Rect * rect1, SDL_Rect * rect2) {
-	if (rect1->x < rect2->x + rect2->w &&
-		rect1->x + rect1->w > rect2->x &&
-		rect1->y < rect2->y + rect2->h &&
-		rect1->h + rect1->y > rect2->y) {
+bool collisionT(VectorI * d, Player * p) {
+	if (d->x < p->rect.x + p->rect.w &&
+		d->x + 100 > p->rect.x &&
+		d->y < p->rect.y + p->rect.h &&
+		d->h + d->y > p->rect.y) {
 		return true;
 	}
 	return false;
 }
-void pMove(Player * p, Controller * c) {
-	p->vel.y += .03f;
+void pMove(Player * p, Controller * c, int b, VectorI * positions) {
+	if (c->gravity) { p->vel.y += .06f; }
+	else { 
+		p->vel.y = .0f;
+		p->vel.x = .0f;
+	}
+
 	if (p->vel.y > 0) {
 		p->rect.y += (int)p->vel.y;
 	}
 	else {
-		p->vel.y += .02f;
 		p->rect.y += (int)p->vel.y;
 	}
 	if (c->up) {
@@ -166,17 +174,28 @@ void pMove(Player * p, Controller * c) {
 	}
 	if (p->vel.x > 0) {
 		p->vel.x -= .05f;
-		p->rect.x += (int)p->vel.x;
+		//p->rect.x += (int)p->vel.x;
 	}
 	else {
 		p->vel.x += .05f;
-		p->rect.x += (int)p->vel.x;
+		//p->rect.x += (int)p->vel.x;
 	}
 	if (c->left) {
 		p->vel.x -= .2f;
 	}
 	else if (c->right) {
 		p->vel.x += .2f;
+	}
+
+	if (background.x <= -screenX*2) {
+		background.x = 0;
+	}
+	if (background.x > 0) {
+		background.x = -screenX*2;
+	}
+	background.x -= ((int)p->vel.x/3);
+	for (int i = 0; i < b; ++i) {
+		positions[i].x -= (int)p->vel.x;
 	}
 }
 void fMove(Player * p, Fire * fire) {
@@ -190,45 +209,51 @@ void fMove(Player * p, Fire * fire) {
 	fire[0].rect.x = p->rect.x;
 
 }
-bool GameLogic(Player * p, Controller * c, int f, Fire * fire) {
+bool GameLogic(Player * p, Controller * c, int f, Fire * fire, int b, VectorI * positions, int * fuel) {
 	if (f == -1) { return false; }
 
-	pMove(p, c);
+	pMove(p, c, b, positions);
 	fMove(p, fire);
-
-
+	std::cout << *fuel << std::endl;
+	for (int i = 0; i < boxNumber; ++i) {
+		//need help with collision stuff
+		if (collisionT(&positions[i], p)) {
+			c->gravity = false;
+		}
+	}
 	return true;
 }
 
-
-
 int main(int argc, char * argv[]) {
 	init();
-	
+	srand(time(NULL));
 	Player player;
 	Controller controls;
 	Fire fire[4];
 	SDL_Rect boxDim = { 0,0,100,100 };
-
+	int fuel = 1000;
 	VectorI positions[boxNumber];
 	int offsetX = 0;
 	int o = 0;
 	for (int i = 0; i < boxNumber; ++i) {
 		positions[i].x += offsetX;
 		offsetX += 100;
-		o = (rand() % 4);
-		positions[i].y = 500 + (o * 100);
+		o = (rand() % 5);
+		positions[i].y = 400 + (o * 100);
 		switch (o) {
 		case 0:
-			positions[i].h = 400;
+			positions[i].h = 500;
 			break;
 		case 1:
-			positions[i].h = 300;
+			positions[i].h = 400;
 			break;
 		case 2:
-			positions[i].h = 200;
+			positions[i].h = 300;
 			break;
 		case 3:
+			positions[i].h = 200;
+			break;
+		case 4:
 			positions[i].h = 100;
 			break;
 		}
@@ -252,8 +277,8 @@ int main(int argc, char * argv[]) {
 		while (SDL_GetTicks() > gameTicks && loops < MAX_FRAMESKIP) {
 			gameTicks += SKIP_TICKS;
 			loops++;
-			int val = Input(&e, &controls, fire);
-			inGame = GameLogic(&player, &controls, val, fire);
+			int val = Input(&e, &controls, fire, &fuel);
+			inGame = GameLogic(&player, &controls, val, fire, boxNumber, positions, &fuel);
 			if (inGame == false) { break; }
 
 			SDL_RenderClear(renderer);
