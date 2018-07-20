@@ -111,7 +111,6 @@ int Input(SDL_Event * e, Controller * c, Fire * fire, int * fuel) {
 				default:
 					return 0;
 				}
-				*fuel -= 1;
 			}
 		}
 		else if (e->type == SDL_KEYUP) {
@@ -153,11 +152,11 @@ bool collisionT(VectorI * d, Player * p) {
 	}
 	return false;
 }
-void pMove(Player * p, Controller * c, int b, VectorI * positions) {
+void pMove(Player * p, Controller * c, int b, VectorI * positions, int * f) {
 	if (c->gravity) { p->vel.y += .06f; }
 	else { 
-		p->vel.y = .0f;
-		p->vel.x = .0f;
+		p->vel.y = 0.0f;
+		p->vel.x = 0.0f;
 	}
 
 	if (p->vel.y > 0) {
@@ -166,11 +165,13 @@ void pMove(Player * p, Controller * c, int b, VectorI * positions) {
 	else {
 		p->rect.y += (int)p->vel.y;
 	}
-	if (c->up) {
+	if (c->up && *f > 0) {
 		p->vel.y -= .2f;
+		*f -= 1;
 	}
-	else if (c->down) {
+	else if (c->down && *f > 0) {
 		p->vel.y += .2f;
+		*f -= 1;
 	}
 	if (p->vel.x > 0) {
 		p->vel.x -= .05f;
@@ -180,11 +181,13 @@ void pMove(Player * p, Controller * c, int b, VectorI * positions) {
 		p->vel.x += .05f;
 		//p->rect.x += (int)p->vel.x;
 	}
-	if (c->left) {
+	if (c->left && *f > 0) {
 		p->vel.x -= .2f;
+		*f -= 1;
 	}
-	else if (c->right) {
+	else if (c->right && *f > 0) {
 		p->vel.x += .2f;
+		*f -= 1;
 	}
 
 	if (background.x <= -screenX*2) {
@@ -212,7 +215,7 @@ void fMove(Player * p, Fire * fire) {
 bool GameLogic(Player * p, Controller * c, int f, Fire * fire, int b, VectorI * positions, int * fuel) {
 	if (f == -1) { return false; }
 
-	pMove(p, c, b, positions);
+	pMove(p, c, b, positions, fuel);
 	fMove(p, fire);
 	std::cout << *fuel << std::endl;
 	for (int i = 0; i < boxNumber; ++i) {
